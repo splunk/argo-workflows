@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -141,19 +140,19 @@ func TestFindOverlappingVolume(t *testing.T) {
 
 func TestUnknownFieldEnforcerForWorkflowStep(t *testing.T) {
 	_, err := SplitWorkflowYAMLFile([]byte(validWf), false)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	_, err = SplitWorkflowYAMLFile([]byte(invalidWf), false)
-	require.EqualError(t, err, `json: unknown field "doesNotExist"`)
+	assert.EqualError(t, err, `json: unknown field "doesNotExist"`)
 }
 
 func TestParseObjects(t *testing.T) {
-	assert.Len(t, ParseObjects([]byte(validWf), false), 1)
+	assert.Equal(t, 1, len(ParseObjects([]byte(validWf), false)))
 
 	res := ParseObjects([]byte(invalidWf), false)
-	assert.Len(t, res, 1)
+	assert.Equal(t, 1, len(res))
 	assert.NotNil(t, res[0].Object)
-	require.EqualError(t, res[0].Err, "json: unknown field \"doesNotExist\"")
+	assert.EqualError(t, res[0].Err, "json: unknown field \"doesNotExist\"")
 
 	invalidObj := []byte(`<div class="blah" style="display: none; outline: none;" tabindex="0"></div>`)
 	assert.Empty(t, ParseObjects(invalidObj, false))
@@ -195,7 +194,7 @@ func TestIsDone(t *testing.T) {
 
 func TestSubstituteConfigMapKeyRefParam(t *testing.T) {
 	res := ParseObjects([]byte(validConfigMapRefWf), false)
-	assert.Len(t, res, 1)
+	assert.Equal(t, 1, len(res))
 
 	obj, ok := res[0].Object.(*wfv1.Workflow)
 	assert.True(t, ok)
@@ -217,7 +216,7 @@ func TestSubstituteConfigMapKeyRefParam(t *testing.T) {
 
 func TestSubstituteConfigMapKeyRefParamWithNoParamsDefined(t *testing.T) {
 	res := ParseObjects([]byte(invalidConfigMapRefWf), false)
-	assert.Len(t, res, 1)
+	assert.Equal(t, 1, len(res))
 
 	obj, ok := res[0].Object.(*wfv1.Workflow)
 	assert.True(t, ok)
@@ -227,11 +226,13 @@ func TestSubstituteConfigMapKeyRefParamWithNoParamsDefined(t *testing.T) {
 
 	for _, inParam := range obj.GetTemplateByName("whalesay").Inputs.Parameters {
 		cmName, err := substituteConfigMapKeyRefParam(inParam.ValueFrom.ConfigMapKeyRef.Name, globalParams)
-		require.EqualError(t, err, "parameter workflow.parameters.name not found")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "parameter workflow.parameters.name not found")
 		assert.Equal(t, "", cmName)
 
 		cmKey, err := substituteConfigMapKeyRefParam(inParam.ValueFrom.ConfigMapKeyRef.Key, globalParams)
-		require.EqualError(t, err, "parameter workflow.parameters.key not found")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "parameter workflow.parameters.key not found")
 		assert.Equal(t, "", cmKey)
 	}
 }
@@ -261,13 +262,13 @@ func TestOverridableDefaultInputArts(t *testing.T) {
 	localParams := make(map[string]string)
 
 	newTmpl, err := ProcessArgs(&tmpl, &inputs, globalParams, localParams, false, "", nil)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Artifacts[0].Raw.Data, rawArt.Data)
 
 	inputs.Artifacts = []wfv1.Artifact{inputArt}
 	newTmpl, err = ProcessArgs(&tmpl, &inputs, globalParams, localParams, false, "", nil)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Artifacts[0].Raw.Data, inputRawArt.Data)
 }
@@ -312,12 +313,12 @@ func TestOverridableTemplateInputParamsValue(t *testing.T) {
 	localParams := make(map[string]string)
 
 	newTmpl, err := ProcessArgs(&tmpl, &valueArgs, globalParams, localParams, false, "", configMapStore)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Parameters[0].Value.String(), valueArgs.Parameters[0].Value.String())
 
 	newTmpl, err = ProcessArgs(&tmpl, &valueFromArgs, globalParams, localParams, false, "", configMapStore)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Parameters[0].Value.String(), overrideConfigMapValue)
 }
@@ -370,12 +371,12 @@ func TestOverridableTemplateInputParamsValueFrom(t *testing.T) {
 	localParams := make(map[string]string)
 
 	newTmpl, err := ProcessArgs(&tmpl, &valueArgs, globalParams, localParams, false, "", configMapStore)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Parameters[0].Value.String(), valueArgs.Parameters[0].Value.String())
 
 	newTmpl, err = ProcessArgs(&tmpl, &valueFromArgs, globalParams, localParams, false, "", configMapStore)
-	require.NoError(t, err)
+	assert.Nil(t, err)
 	assert.NotNil(t, newTmpl)
 	assert.Equal(t, newTmpl.Inputs.Parameters[0].Value.String(), overrideConfigMapValue)
 }

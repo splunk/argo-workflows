@@ -6,10 +6,12 @@ metadata:
     workflows.argoproj.io/test: "true"
   annotations:
     workflows.argoproj.io/description: |
-      This example demonstrates how a global parameter from a ConfigMap can be referenced as a template local variable.
-      Note that the "simple-parameters" ConfigMap (defined in `examples/configmaps/simple-parameters-configmap.yaml`) needs to be created first before submitting this workflow.
+      This example demonstrates global parameter from configmap can be referenced as template local variable.
+      Note that the "simple-parameters" ConfigMap (defined in examples/configmaps/simple-parameters-configmap.yaml)
+      needs to be created first before submitting this workflow.
 spec:
-  entrypoint: print-message
+  serviceAccountName: argo
+  entrypoint: whalesay
   arguments:
     parameters:
       - name: message
@@ -18,11 +20,10 @@ spec:
             name: simple-parameters
             key: msg
   templates:
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message
     container:
-      image: busybox
-      command: ["echo"]
-      args: ["{{inputs.parameters.message}}"]
+      image: argoproj/argosay:v2
+      args: ["echo", "{{inputs.parameters.message}}"]

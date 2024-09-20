@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type SimpleValue struct {
@@ -14,12 +13,12 @@ type SimpleValue struct {
 
 func processTemplate(t *testing.T, tmpl SimpleValue, replaceMap map[string]string) SimpleValue {
 	tmplBytes, err := json.Marshal(tmpl)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	r, err := Replace(string(tmplBytes), replaceMap, true)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	var newTmpl SimpleValue
 	err = json.Unmarshal([]byte(r), &newTmpl)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return newTmpl
 }
 

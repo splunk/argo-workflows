@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const cwfts = `
@@ -41,6 +40,7 @@ spec:
 
 func TestUnmarshalCWFT(t *testing.T) {
 	clusterwfts, err := unmarshalClusterWorkflowTemplates([]byte(cwfts), false)
-	require.NoError(t, err)
-	assert.Len(t, clusterwfts, 2)
+	if assert.NoError(t, err) {
+		assert.Equal(t, 2, len(clusterwfts))
+	}
 }

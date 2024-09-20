@@ -39,12 +39,12 @@ spec:
         parameters:
           - name: message
       container:
-        image: busybox
-        command: [echo]
+        image: docker/whalesay
+        command: [cowsay]
         args: ["{{inputs.parameters.message}}"]
 
     - name: exit
       container:
-        image: busybox
-        command: [echo]
+        image: docker/whalesay
+        command: [cowsay]
         args: ["task cleanup"]

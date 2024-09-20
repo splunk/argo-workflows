@@ -26,13 +26,13 @@ kind: Workflow
 metadata:
   generateName: hello-world-  # Name of this Workflow
 spec:
-  entrypoint: hello-world     # Defines "hello-world" as the "main" template
+  entrypoint: whalesay        # Defines "whalesay" as the "main" template
   templates:
-  - name: hello-world         # Defines the "hello-world" template
+  - name: whalesay            # Defining the "whalesay" template
     container:
-      image: busybox
-      command: [echo]
-      args: ["hello world"]   # This template runs "echo" in the "busybox" image with arguments "hello world"
+      image: docker/whalesay
+      command: [cowsay]
+      args: ["hello world"]   # This template runs "cowsay" in the "whalesay" image with arguments "hello world"
 ```
 
 ### `template` Types
@@ -50,10 +50,10 @@ Perhaps the most common template type, it will schedule a Container. The spec of
 Example:
 
 ```yaml
-  - name: hello-world
+  - name: whalesay
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay
+      command: [cowsay]
       args: ["hello world"]
 ```
 

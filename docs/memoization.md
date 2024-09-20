@@ -32,15 +32,15 @@ kind: Workflow
 metadata:
    generateName: memoized-workflow-
 spec:
-   entrypoint: print-message
+   entrypoint: whalesay
    templates:
-      - name: print-message
+      - name: whalesay
         memoize:
            key: "{{inputs.parameters.message}}"
            maxAge: "10s"
            cache:
               configMap:
-                 name: print-message-cache
+                 name: whalesay-cache
 ```
 
 [Find a simple example for memoization here](https://github.com/argoproj/argo-workflows/blob/main/examples/memoize-simple.yaml).

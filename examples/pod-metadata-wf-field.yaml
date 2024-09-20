@@ -5,29 +5,29 @@ metadata:
   generateName: steps-
 spec:
   entrypoint: hello-hello-hello
-
+  
   podMetadata:
     annotations:
         iam.amazonaws.com/role: role-arn
     labels:
-        app: print-message
+        app: whalesay
         tier: demo
 
   templates:
   - name: hello-hello-hello
     steps:
     - - name: hello1
-        template: print-message
+        template: whalesay
         arguments:
           parameters:
           - name: message
             value: "hello1"
 
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay
+      command: [cowsay]
       args: ["{{inputs.parameters.message}}"]

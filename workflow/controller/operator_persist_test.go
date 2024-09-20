@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/argoproj/argo-workflows/v3/errors"
@@ -57,13 +56,13 @@ func TestPersistWithoutLargeWfSupport(t *testing.T) {
 	wfcset := controller.wfclientset.ArgoprojV1alpha1().Workflows("")
 	wf := wfv1.MustUnmarshalWorkflow(helloWorldWfPersist)
 	wf, err := wfcset.Create(ctx, wf, metav1.CreateOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	controller.offloadNodeStatusRepo, controller.hydrator = getMockDBCtx(fmt.Errorf("not found"), false)
 	woc := newWorkflowOperationCtx(wf, controller)
 	woc.operate(ctx)
 	wf, err = wfcset.Get(ctx, wf.Name, metav1.GetOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.False(t, wf.Status.IsOffloadNodeStatus())
 	assert.Equal(t, wfv1.WorkflowError, woc.wf.Status.Phase)
 }
@@ -78,13 +77,13 @@ func TestPersistErrorWithoutLargeWfSupport(t *testing.T) {
 	wfcset := controller.wfclientset.ArgoprojV1alpha1().Workflows("")
 	wf := wfv1.MustUnmarshalWorkflow(helloWorldWfPersist)
 	wf, err := wfcset.Create(ctx, wf, metav1.CreateOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	controller.offloadNodeStatusRepo, controller.hydrator = getMockDBCtx(errors.New("23324", "test"), false)
 	woc := newWorkflowOperationCtx(wf, controller)
 	woc.operate(ctx)
 	wf, err = wfcset.Get(ctx, wf.Name, metav1.GetOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, wfv1.WorkflowError, wf.Status.Phase)
 }
 
@@ -98,13 +97,13 @@ func TestPersistWithLargeWfSupport(t *testing.T) {
 	wfcset := controller.wfclientset.ArgoprojV1alpha1().Workflows("")
 	wf := wfv1.MustUnmarshalWorkflow(helloWorldWfPersist)
 	wf, err := wfcset.Create(ctx, wf, metav1.CreateOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	controller.offloadNodeStatusRepo, controller.hydrator = getMockDBCtx(nil, true)
 	woc := newWorkflowOperationCtx(wf, controller)
 	woc.operate(ctx)
 	wf, err = wfcset.Get(ctx, wf.Name, metav1.GetOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, wfv1.WorkflowRunning, woc.wf.Status.Phase)
 	// check the saved version has been offloaded
 	assert.True(t, wf.Status.IsOffloadNodeStatus())
@@ -126,13 +125,13 @@ func TestPersistErrorWithLargeWfSupport(t *testing.T) {
 	wfcset := controller.wfclientset.ArgoprojV1alpha1().Workflows("")
 	wf := wfv1.MustUnmarshalWorkflow(helloWorldWfPersist)
 	wf, err := wfcset.Create(ctx, wf, metav1.CreateOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	controller.offloadNodeStatusRepo, controller.hydrator = getMockDBCtx(errors.New("23324", "test"), true)
 	woc := newWorkflowOperationCtx(wf, controller)
 	woc.operate(ctx)
 	wf, err = wfcset.Get(ctx, wf.Name, metav1.GetOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, wfv1.WorkflowError, woc.wf.Status.Phase)
 	// check the saved version has not been offloaded
 	assert.False(t, wf.Status.IsOffloadNodeStatus())

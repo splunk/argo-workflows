@@ -13,11 +13,8 @@ import (
 func (woc *wfOperationCtx) queuePodsForCleanup() {
 	delay := woc.controller.Config.GetPodGCDeleteDelayDuration()
 	podGC := woc.execWf.Spec.PodGC
-	podGCDelay, err := podGC.GetDeleteDelayDuration()
-	if err != nil {
-		woc.log.WithError(err).Warn("failed to parse podGC.deleteDelayDuration")
-	} else if podGCDelay >= 0 {
-		delay = podGCDelay
+	if podGC != nil && podGC.DeleteDelayDuration != nil {
+		delay = podGC.DeleteDelayDuration.Duration
 	}
 	strategy := podGC.GetStrategy()
 	selector, _ := podGC.GetLabelSelector()

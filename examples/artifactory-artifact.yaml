@@ -14,19 +14,19 @@ spec:
   - name: artifact-example
     steps:
     - - name: generate-artifact
-        template: hello-world-to-file
+        template: whalesay
     - - name: consume-artifact
-        template: print-message-from-file
+        template: print-message
         arguments:
           artifacts:
           - name: message
             from: "{{steps.generate-artifact.outputs.artifacts.hello-art}}"
 
-  - name: hello-world-to-file
+  - name: whalesay
     container:
-      image: busybox
+      image: docker/whalesay:latest
       command: [sh, -c]
-      args: ["echo hello world | tee /tmp/hello_world.txt"]
+      args: ["cowsay hello world | tee /tmp/hello_world.txt"]
     outputs:
       artifacts:
       - name: hello-art
@@ -40,7 +40,7 @@ spec:
             name: my-artifactory-credentials
             key: password
 
-  - name: print-message-from-file
+  - name: print-message
     inputs:
       artifacts:
       - name: message

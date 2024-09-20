@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 )
@@ -83,19 +82,19 @@ func TestGetTaskDependenciesFromDepends(t *testing.T) {
 func TestValidateTaskResults(t *testing.T) {
 	task := &wfv1.DAGTask{Depends: "(task-1 || task-2.Succeeded) && !task-3"}
 	err := ValidateTaskResults(task)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	task = &wfv1.DAGTask{Depends: "((task-1.Succeeded || task-1.Failed) || task-2.Succeeded) && !task-3.Skipped && task-2.Failed || task-6.Succeeded"}
 	err = ValidateTaskResults(task)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	task = &wfv1.DAGTask{Depends: "((task-1.Succeeded || task-1.Omitted) || task-2.Succeeded) && !task-3.Skipped && task-2.Failed || task-6.Succeeded"}
 	err = ValidateTaskResults(task)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	task = &wfv1.DAGTask{Depends: "(task-1.DoeNotExist || task-2.Succeeded)"}
 	err = ValidateTaskResults(task)
-	require.Error(t, err, "task result 'DoeNotExist' for task 'task-1' is invalid")
+	assert.Error(t, err, "task result 'DoeNotExist' for task 'task-1' is invalid")
 }
 
 func TestGetTaskDependsLogic(t *testing.T) {

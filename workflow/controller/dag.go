@@ -51,7 +51,7 @@ type dagContext struct {
 	dependencies map[string][]string
 
 	// dependsLogic is the resolved "depends" string of a particular task. A resolved "depends" simply contains
-	// task with their explicit results since we allow them to be omitted for convenience
+	// task with their explicit results since we allow them to be omitted for convinience
 	// (i.e., "A || (B.Succeeded || B.Failed)" -> "(A.Succeeded || A.Skipped || A.Daemoned) || (B.Succeeded || B.Failed)").
 	// Because this resolved "depends" is computed using regex and regex is expensive, we cache the results so that they
 	// are only computed once per operation
@@ -431,11 +431,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 
 	if node != nil && node.Fulfilled() {
 		// Collect the completed task metrics
-		_, tmpl, _, tmplErr := dagCtx.tmplCtx.ResolveTemplate(task)
-		if tmplErr != nil {
-			woc.markNodeError(node.Name, tmplErr)
-			return
-		}
+		_, tmpl, _, _ := dagCtx.tmplCtx.ResolveTemplate(task)
 		if err := woc.mergedTemplateDefaultsInto(tmpl); err != nil {
 			woc.markNodeError(node.Name, err)
 			return
@@ -443,7 +439,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 		if tmpl != nil && tmpl.Metrics != nil {
 			if prevNodeStatus, ok := woc.preExecutionNodePhases[node.ID]; ok && !prevNodeStatus.Fulfilled() {
 				localScope, realTimeScope := woc.prepareMetricScope(node)
-				woc.computeMetrics(ctx, tmpl.Metrics.Prometheus, localScope, realTimeScope, false)
+				woc.computeMetrics(tmpl.Metrics.Prometheus, localScope, realTimeScope, false)
 			}
 		}
 
@@ -453,7 +449,7 @@ func (woc *wfOperationCtx) executeDAGTask(ctx context.Context, dagCtx *dagContex
 		}
 
 		// Release acquired lock completed task.
-		if processedTmpl != nil {
+		if tmpl != nil {
 			woc.controller.syncManager.Release(woc.wf, node.ID, processedTmpl.Synchronization)
 		}
 

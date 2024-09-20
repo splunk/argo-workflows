@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/utils/ptr"
+	"k8s.io/utils/pointer"
 
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
@@ -23,13 +23,13 @@ var helloWorldWorkflow = wfv1.Workflow{
 		GenerateName: "hello-world-",
 	},
 	Spec: wfv1.WorkflowSpec{
-		Entrypoint: "hello-world",
+		Entrypoint: "whalesay",
 		Templates: []wfv1.Template{
 			{
-				Name: "hello-world",
+				Name: "whalesay",
 				Container: &corev1.Container{
-					Image:   "busybox",
-					Command: []string{"echo", "hello world"},
+					Image:   "docker/whalesay:latest",
+					Command: []string{"cowsay", "hello world"},
 				},
 			},
 		},
@@ -61,7 +61,7 @@ func main() {
 
 	// wait for the workflow to complete
 	fieldSelector := fields.ParseSelectorOrDie(fmt.Sprintf("metadata.name=%s", createdWf.Name))
-	watchIf, err := wfClient.Watch(ctx, metav1.ListOptions{FieldSelector: fieldSelector.String(), TimeoutSeconds: ptr.To(int64(180))})
+	watchIf, err := wfClient.Watch(ctx, metav1.ListOptions{FieldSelector: fieldSelector.String(), TimeoutSeconds: pointer.Int64(180)})
 	errors.CheckError(err)
 	defer watchIf.Stop()
 	for next := range watchIf.ResultChan() {

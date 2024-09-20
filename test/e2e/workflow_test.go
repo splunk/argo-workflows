@@ -1,4 +1,5 @@
 //go:build functional
+// +build functional
 
 package e2e
 
@@ -33,7 +34,7 @@ spec:
   serviceAccountName: argo
   automountServiceAccountToken: false
   executor:
-    serviceAccountName: get-cm
+    serviceAccountName: argo 
   entrypoint: main
   templates:
     - name: main
@@ -67,7 +68,7 @@ spec:
   serviceAccountName: argo
   automountServiceAccountToken: false
   executor:
-    serviceAccountName: get-cm
+    serviceAccountName: argo
   entrypoint: main
   templates:
     - name: main

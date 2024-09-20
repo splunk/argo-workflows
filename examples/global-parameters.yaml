@@ -3,7 +3,7 @@ kind: Workflow
 metadata:
   generateName: global-parameters-
 spec:
-  entrypoint: print-message
+  entrypoint: whalesay1
   # Parameters can be passed/overridden via the argo CLI.
   # To override the printed message, run `argo submit` with the -p option:
   # $ argo submit examples/arguments-parameters.yaml -p message="goodbye world"
@@ -13,8 +13,8 @@ spec:
       value: hello world
 
   templates:
-  - name: print-message
+  - name: whalesay1
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["{{workflow.parameters.message}}"]

@@ -4,7 +4,7 @@ import {ArtifactRepositoryRefStatus, NODE_PHASE, NodeStatus} from '../../../../m
 import {nodeArtifacts} from '../../../shared/artifacts';
 import {GraphPanel} from '../../../shared/components/graph/graph-panel';
 import {Graph} from '../../../shared/components/graph/types';
-import {shortNodeName} from '../../utils';
+import {Utils} from '../../../shared/utils';
 import {genres} from './genres';
 import {getCollapsedNodeName, getMessage, getNodeParent, isCollapsedNode} from './graph/collapsible-node';
 import {icons} from './icons';
@@ -39,7 +39,7 @@ function getNodeLabelTemplateName(n: NodeStatus): string {
 function nodeLabel(n: NodeStatus) {
     const phase = n.type === 'Suspend' && n.phase === 'Running' ? 'Suspended' : n.phase;
     return {
-        label: shortNodeName(n),
+        label: Utils.shortNodeName(n),
         genre: n.type,
         icon: icons[phase] || icons.Pending,
         progress: phase === 'Running' && progress(n),

@@ -11,20 +11,20 @@ spec:
   - name: workflow-ignore
     steps:
     - - name: A
-        template: hello-world
+        template: whalesay
     - - name: B
-        template: hello-world
+        template: whalesay
       - name: C
         template: intentional-fail
         continueOn:
           failed: true
     - - name: D
-        template: hello-world
+        template: whalesay
 
-  - name: hello-world
+  - name: whalesay
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world"]
 
   - name: intentional-fail

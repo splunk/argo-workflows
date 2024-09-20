@@ -3,12 +3,12 @@ kind: Workflow
 metadata:
   generateName: archive-location-
 spec:
-  entrypoint: hello-world
+  entrypoint: whalesay
   templates:
-  - name: hello-world
+  - name: whalesay
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world"]
     # archiveLocation allows configuring the archive location for a specific step
     archiveLocation:

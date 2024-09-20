@@ -20,9 +20,9 @@ spec:
   concurrencyPolicy: "Replace"
   startingDeadlineSeconds: 0
   workflowSpec:
-    entrypoint: date
+    entrypoint: whalesay
     templates:
-    - name: date
+    - name: whalesay
       container:
         image: alpine:3.6
         command: [sh, -c]

@@ -1,4 +1,5 @@
 //go:build executor
+// +build executor
 
 package e2e
 
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -186,18 +186,18 @@ func (s *ArtifactsSuite) TestStoppedWorkflow() {
 		c, err := minio.New("localhost:9000", &minio.Options{
 			Creds: credentials.NewStaticV4("admin", "password", ""),
 		})
-		s.Require().NoError(err)
+		assert.NoError(s.T(), err)
 
 		// Ensure the artifacts aren't in the bucket.
 		_, err = c.StatObject(context.Background(), "my-bucket-3", "on-deletion-wf-stopped-1", minio.StatObjectOptions{})
 		if err == nil {
 			err = c.RemoveObject(context.Background(), "my-bucket-3", "on-deletion-wf-stopped-1", minio.RemoveObjectOptions{})
-			s.Require().NoError(err)
+			assert.NoError(s.T(), err)
 		}
 		_, err = c.StatObject(context.Background(), "my-bucket-3", "on-deletion-wf-stopped-2", minio.StatObjectOptions{})
 		if err == nil {
 			err = c.RemoveObject(context.Background(), "my-bucket-3", "on-deletion-wf-stopped-2", minio.RemoveObjectOptions{})
-			s.Require().NoError(err)
+			assert.NoError(s.T(), err)
 		}
 
 		then := s.Given().
@@ -207,10 +207,10 @@ func (s *ArtifactsSuite) TestStoppedWorkflow() {
 
 		// Assert the artifacts don't exist.
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-1", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.Error(t, err)
+			assert.NotNil(t, err)
 		})
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-2", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.Error(t, err)
+			assert.NotNil(t, err)
 		})
 
 		when := then.When().
@@ -235,10 +235,10 @@ func (s *ArtifactsSuite) TestStoppedWorkflow() {
 
 		// Assert artifact exists
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-1", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.NoError(t, err)
+			assert.NoError(t, err)
 		})
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-2", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.NoError(t, err)
+			assert.NoError(t, err)
 		})
 
 		when = then.When()
@@ -251,10 +251,10 @@ func (s *ArtifactsSuite) TestStoppedWorkflow() {
 
 		// Assert the artifacts don't exist.
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-1", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.Error(t, err)
+			assert.NotNil(t, err)
 		})
 		then.ExpectArtifactByKey("on-deletion-wf-stopped-2", "my-bucket-3", func(t *testing.T, object minio.ObjectInfo, err error) {
-			require.Error(t, err)
+			assert.NotNil(t, err)
 		})
 
 		when = then.When()
@@ -388,14 +388,6 @@ func (s *ArtifactsSuite) TestArtifactGC() {
 				artifactState{s3Location{bucketName: "my-bucket", derivedKey: &artifactDerivedKey{templateName: "artifact-written", artifactName: "present"}}, false, true},
 			},
 		},
-		// Workflow defined output artifact but execution failed, no artifacts to be gced
-		{
-			workflowFile:                 "@testdata/artifactgc/artgc-artifact-not-written-failed.yaml",
-			hasGC:                        true,
-			workflowShouldSucceed:        false,
-			expectedGCPodsOnWFCompletion: 0,
-			expectedArtifacts:            []artifactState{},
-		},
 	} {
 		// for each test make sure that:
 		// 1. the finalizer gets added
@@ -447,12 +439,12 @@ func (s *ArtifactsSuite) TestArtifactGC() {
 			if expectedArtifact.deletedAtWFCompletion {
 				fmt.Printf("verifying artifact %s is deleted at completion time\n", artifactKey)
 				then.ExpectArtifactByKey(artifactKey, expectedArtifact.artifactLocation.bucketName, func(t *testing.T, object minio.ObjectInfo, err error) {
-					require.Error(t, err)
+					assert.NotNil(t, err)
 				})
 			} else {
 				fmt.Printf("verifying artifact %s is not deleted at completion time\n", artifactKey)
 				then.ExpectArtifactByKey(artifactKey, expectedArtifact.artifactLocation.bucketName, func(t *testing.T, object minio.ObjectInfo, err error) {
-					require.NoError(t, err)
+					assert.NoError(t, err)
 				})
 			}
 		}
@@ -482,12 +474,12 @@ func (s *ArtifactsSuite) TestArtifactGC() {
 			if expectedArtifact.deletedAtWFDeletion {
 				fmt.Printf("verifying artifact %s is deleted\n", artifactKey)
 				then.ExpectArtifactByKey(artifactKey, expectedArtifact.artifactLocation.bucketName, func(t *testing.T, object minio.ObjectInfo, err error) {
-					require.Error(t, err)
+					assert.NotNil(t, err)
 				})
 			} else {
 				fmt.Printf("verifying artifact %s is not deleted\n", artifactKey)
 				then.ExpectArtifactByKey(artifactKey, expectedArtifact.artifactLocation.bucketName, func(t *testing.T, object minio.ObjectInfo, err error) {
-					require.NoError(t, err)
+					assert.NoError(t, err)
 				})
 			}
 		}
@@ -529,7 +521,7 @@ spec:
 func (s *ArtifactsSuite) TestInsufficientRole() {
 	ctx := context.Background()
 	_, err := s.KubeClient.CoreV1().ServiceAccounts(fixtures.Namespace).Create(ctx, &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Name: "artgc-role-test-sa"}}, metav1.CreateOptions{})
-	s.Require().NoError(err)
+	assert.NoError(s.T(), err)
 	s.T().Cleanup(func() {
 		_ = s.KubeClient.CoreV1().ServiceAccounts(fixtures.Namespace).Delete(ctx, "artgc-role-test-sa", metav1.DeleteOptions{})
 	})
@@ -553,13 +545,13 @@ func (s *ArtifactsSuite) TestInsufficientRole() {
 		var workflow wfv1.Workflow
 		err = yaml.Unmarshal([]byte(insufficientRoleWorkflow), &workflow)
 		if err != nil {
-			s.Fail(err.Error())
+			assert.Fail(s.T(), err.Error())
 		}
 
 		workflow.Spec.ArtifactGC.ForceFinalizerRemoval = tt.forceFinalizerRemoval
 		modifiedWorkflow, err := yaml.Marshal(&workflow)
 		if err != nil {
-			s.Fail(err.Error())
+			assert.Fail(s.T(), err.Error())
 		}
 
 		// Submit the Workflow
@@ -592,13 +584,13 @@ func (s *ArtifactsSuite) TestInsufficientRole() {
 						failCondition = true
 					}
 				}
-				assert.True(t, failCondition)
+				assert.Equal(t, true, failCondition)
 			}).
 			ExpectWorkflow(func(t *testing.T, meta *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
 				if tt.forceFinalizerRemoval {
-					s.NotContains(meta.Finalizers, common.FinalizerArtifactGC)
+					assert.NotContains(s.T(), meta.Finalizers, common.FinalizerArtifactGC)
 				} else {
-					s.Contains(meta.Finalizers, common.FinalizerArtifactGC)
+					assert.Contains(s.T(), meta.Finalizers, common.FinalizerArtifactGC)
 				}
 			}).
 			When().
@@ -675,9 +667,10 @@ func (s *ArtifactsSuite) TestOutputResult() {
 		Then().
 		ExpectWorkflow(func(t *testing.T, _ *metav1.ObjectMeta, status *wfv1.WorkflowStatus) {
 			n := status.Nodes.FindByDisplayName("a")
-			require.NotNil(t, n)
-			assert.NotNil(t, n.Outputs.ExitCode)
-			assert.NotNil(t, n.Outputs.Result)
+			if assert.NotNil(t, n) {
+				assert.NotNil(t, n.Outputs.ExitCode)
+				assert.NotNil(t, n.Outputs.Result)
+			}
 		})
 }
 
@@ -690,7 +683,7 @@ func (s *ArtifactsSuite) TestMainLog() {
 			WaitForWorkflow(fixtures.ToBeSucceeded).
 			Then().
 			ExpectArtifact("-", "main-logs", "my-bucket", func(t *testing.T, object minio.ObjectInfo, err error) {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			})
 	})
 	s.Run("ActiveDeadlineSeconds", func() {
@@ -701,7 +694,7 @@ func (s *ArtifactsSuite) TestMainLog() {
 			WaitForWorkflow(fixtures.ToBeFailed).
 			Then().
 			ExpectArtifact("-", "main-logs", "my-bucket", func(t *testing.T, object minio.ObjectInfo, err error) {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			})
 	})
 }
@@ -751,8 +744,9 @@ spec:
 						},
 					},
 				}
-				require.NotNil(t, n)
-				assert.Equal(t, expectedOutputs, n.Outputs)
+				if assert.NotNil(t, n) {
+					assert.Equal(t, n.Outputs, expectedOutputs)
+				}
 			})
 	})
 }

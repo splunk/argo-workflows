@@ -2,12 +2,12 @@
  * @jest-environment jsdom
  */
 import {historyUrl} from './history';
-import * as nsUtils from './namespaces';
+import {Utils} from './utils';
 
 describe('history URL', () => {
     test('namespace', () => {
         expect(historyUrl('foo/{namespace}', {namespace: 'my-ns'})).toBe('/foo/my-ns?');
-        expect(nsUtils.getCurrentNamespace()).toBe('my-ns');
+        expect(Utils.currentNamespace).toBe('my-ns');
     });
 
     test('path parameter', () => {

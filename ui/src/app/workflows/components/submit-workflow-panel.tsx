@@ -5,9 +5,10 @@ import {Parameter, Template} from '../../../models';
 import {Context} from '../../shared/context';
 import {uiUrl} from '../../shared/base';
 import {ErrorNotice} from '../../shared/components/error-notice';
-import {getValueFromParameter, ParametersInput} from '../../shared/components/parameters-input';
+import {ParametersInput} from '../../shared/components/parameters-input';
 import {TagsInput} from '../../shared/components/tags-input/tags-input';
 import {services} from '../../shared/services';
+import {Utils} from '../../shared/utils';
 
 interface Props {
     kind: string;
@@ -52,8 +53,8 @@ export function SubmitWorkflowPanel(props: Props) {
             const submitted = await services.workflows.submit(props.kind, props.name, props.namespace, {
                 entryPoint: entrypoint === workflowEntrypoint ? null : entrypoint,
                 parameters: [
-                    ...workflowParameters.filter(p => getValueFromParameter(p) !== undefined).map(p => p.name + '=' + getValueFromParameter(p)),
-                    ...parameters.filter(p => getValueFromParameter(p) !== undefined).map(p => p.name + '=' + getValueFromParameter(p))
+                    ...workflowParameters.filter(p => Utils.getValueFromParameter(p) !== undefined).map(p => p.name + '=' + Utils.getValueFromParameter(p)),
+                    ...parameters.filter(p => Utils.getValueFromParameter(p) !== undefined).map(p => p.name + '=' + Utils.getValueFromParameter(p))
                 ],
                 labels: labels.join(',')
             });

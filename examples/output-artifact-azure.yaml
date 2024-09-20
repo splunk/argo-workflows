@@ -6,13 +6,13 @@ kind: Workflow
 metadata:
   generateName: output-artifact-s3-
 spec:
-  entrypoint: hello-world-to-file
+  entrypoint: whalesay
   templates:
-  - name: hello-world-to-file
+  - name: whalesay
     container:
-      image: busybox
+      image: docker/whalesay:latest
       command: [sh, -c]
-      args: ["echo hello world | tee /tmp/hello_world.txt"]
+      args: ["cowsay hello world | tee /tmp/hello_world.txt"]
     outputs:
       artifacts:
       - name: message

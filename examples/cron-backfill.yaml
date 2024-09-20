@@ -17,7 +17,7 @@ spec:
         parameters:
           - name: date
       script:
-        image: busybox
+        image: docker/whalesay:latest
         command:
           - sh
         source: |

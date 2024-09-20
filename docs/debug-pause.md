@@ -19,9 +19,9 @@ kind: Workflow
 metadata:
   generateName: pause-after-
 spec:
-  entrypoint: argosay
+  entrypoint: whalesay
   templates:
-    - name: argosay
+    - name: whalesay
       container:
         image: argoproj/argosay:v2
         env:
@@ -43,9 +43,9 @@ kind: Workflow
 metadata:
   generateName: pause-after-
 spec:
-  entrypoint: argosay
+  entrypoint: whalesay
   templates:
-    - name: argosay
+    - name: whalesay
       container:
         image: argoproj/argosay:v2
         env:

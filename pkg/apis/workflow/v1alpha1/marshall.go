@@ -49,7 +49,7 @@ func MustMarshallJSON(v interface{}) string {
 	return string(data)
 }
 
-func MustUnmarshalClusterWorkflowTemplate(text interface{}) *ClusterWorkflowTemplate {
+func MustUnmarshalClusterWorkflow(text interface{}) *ClusterWorkflowTemplate {
 	x := &ClusterWorkflowTemplate{}
 	MustUnmarshal(text, &x)
 	return x

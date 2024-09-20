@@ -9,30 +9,30 @@ spec:
     dag:
       tasks:
       - name: A
-        template: hello-world
+        template: whalesay
       - name: B
         depends: "A"
         template: intentional-fail
       - name: C
         depends: "A"
-        template: hello-world
+        template: whalesay
       - name: D
         depends: "B.Failed && C"
-        template: hello-world
+        template: whalesay
       - name: E
         depends: "A"
         template: intentional-fail
       - name: F
         depends: "A"
-        template: hello-world
+        template: whalesay
       - name: G
         depends: "E && F"
-        template: hello-world
+        template: whalesay
 
-  - name: hello-world
+  - name: whalesay
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world"]
 
   - name: intentional-fail

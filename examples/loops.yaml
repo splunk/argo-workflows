@@ -7,8 +7,8 @@ spec:
   templates:
   - name: loop-example
     steps:
-    - - name: print-message-loop
-        template: print-message
+    - - name: print-message
+        template: whalesay
         arguments:
           parameters:
           - name: message
@@ -17,11 +17,11 @@ spec:
         - hello world
         - goodbye world
 
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["{{inputs.parameters.message}}"]

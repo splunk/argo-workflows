@@ -5,10 +5,10 @@ metadata:
 spec:
   # archiveLogs allows configuring the archive location for the workflow
   archiveLogs: true
-  entrypoint: hello-world
+  entrypoint: whalesay
   templates:
-  - name: hello-world
+  - name: whalesay
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world"]

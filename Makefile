@@ -107,19 +107,9 @@ ifndef $(GOPATH)
 endif
 
 # -- file lists
-HACK_PKG_FILES_AS_PKGS ?= false
-ifeq ($(HACK_PKG_FILES_AS_PKGS),false)
-	ARGOEXEC_PKG_FILES        := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/argoexec/ |  grep 'argoproj/argo-workflows/v3/' | xargs go list -f '{{ range $$file := .GoFiles }}{{ print $$.ImportPath "/" $$file "\n" }}{{ end }}' | cut -c 39-)
-	CLI_PKG_FILES             := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/argo/ |  grep 'argoproj/argo-workflows/v3/' | xargs go list -f '{{ range $$file := .GoFiles }}{{ print $$.ImportPath "/" $$file "\n" }}{{ end }}' | cut -c 39-)
-	CONTROLLER_PKG_FILES      := $(shell go list -f '{{ join .Deps "\n" }}' ./cmd/workflow-controller/ |  grep 'argoproj/argo-workflows/v3/' | xargs go list -f '{{ range $$file := .GoFiles }}{{ print $$.ImportPath "/" $$file "\n" }}{{ end }}' | cut -c 39-)
-else
-# Building argoexec on windows cannot rebuild the openapi, we need to fall back to the old
-# behaviour where we fake dependencies and therefore don't rebuild
-	ARGOEXEC_PKG_FILES    := $(shell echo cmd/argoexec            && go list -f '{{ join .Deps "\n" }}' ./cmd/argoexec/            | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
-	CLI_PKG_FILES         := $(shell echo cmd/argo                && go list -f '{{ join .Deps "\n" }}' ./cmd/argo/                | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
-	CONTROLLER_PKG_FILES  := $(shell echo cmd/workflow-controller && go list -f '{{ join .Deps "\n" }}' ./cmd/workflow-controller/ | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
-endif
-
+ARGOEXEC_PKGS    := $(shell echo cmd/argoexec            && go list -f '{{ join .Deps "\n" }}' ./cmd/argoexec/            | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
+CLI_PKGS         := $(shell echo cmd/argo                && go list -f '{{ join .Deps "\n" }}' ./cmd/argo/                | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
+CONTROLLER_PKGS  := $(shell echo cmd/workflow-controller && go list -f '{{ join .Deps "\n" }}' ./cmd/workflow-controller/ | grep 'argoproj/argo-workflows/v3/' | cut -c 39-)
 TYPES := $(shell find pkg/apis/workflow/v1alpha1 -type f -name '*.go' -not -name openapi_generated.go -not -name '*generated*' -not -name '*test.go')
 CRDS := $(shell find manifests/base/crds -type f -name 'argoproj.io_*.yaml')
 SWAGGER_FILES := pkg/apiclient/_.primary.swagger.json \
@@ -165,7 +155,7 @@ ui/dist/app/index.html: $(shell find ui/src -type f && find ui -maxdepth 1 -type
 	# `yarn build` is slow, so we guard it with a up-to-date check.
 	JOBS=max yarn --cwd ui build
 
-$(GOPATH)/bin/staticfiles: Makefile
+$(GOPATH)/bin/staticfiles:
 # update this in Nix when updating it here
 ifneq ($(USE_NIX), true)
 	go install bou.ke/staticfiles@dd04075
@@ -193,16 +183,16 @@ dist/argo-windows-amd64: GOARGS = GOOS=windows GOARCH=amd64
 dist/argo-windows-%.gz: dist/argo-windows-%
 	gzip --force --keep dist/argo-windows-$*.exe
 
-dist/argo-windows-%: server/static/files.go $(CLI_PKG_FILES) go.sum
+dist/argo-windows-%: server/static/files.go $(CLI_PKGS) go.sum
 	CGO_ENABLED=0 $(GOARGS) go build -v -gcflags '${GCFLAGS}' -ldflags '${LDFLAGS} -extldflags -static' -o $@.exe ./cmd/argo
 
 dist/argo-%.gz: dist/argo-%
 	gzip --force --keep dist/argo-$*
 
-dist/argo-%: server/static/files.go $(CLI_PKG_FILES) go.sum
+dist/argo-%: server/static/files.go $(CLI_PKGS) go.sum
 	CGO_ENABLED=0 $(GOARGS) go build -v -gcflags '${GCFLAGS}' -ldflags '${LDFLAGS} -extldflags -static' -o $@ ./cmd/argo
 
-dist/argo: server/static/files.go $(CLI_PKG_FILES) go.sum
+dist/argo: server/static/files.go $(CLI_PKGS) go.sum
 ifeq ($(shell uname -s),Darwin)
 	# if local, then build fast: use CGO and dynamic-linking
 	go build -v -gcflags '${GCFLAGS}' -ldflags '${LDFLAGS}' -o $@ ./cmd/argo
@@ -220,7 +210,7 @@ clis: dist/argo-linux-amd64.gz dist/argo-linux-arm64.gz dist/argo-linux-ppc64le.
 .PHONY: controller
 controller: dist/workflow-controller
 
-dist/workflow-controller: $(CONTROLLER_PKG_FILES) go.sum
+dist/workflow-controller: $(CONTROLLER_PKGS) go.sum
 ifeq ($(shell uname -s),Darwin)
 	# if local, then build fast: use CGO and dynamic-linking
 	go build -gcflags '${GCFLAGS}' -v -ldflags '${LDFLAGS}' -o $@ ./cmd/workflow-controller
@@ -232,7 +222,7 @@ workflow-controller-image:
 
 # argoexec
 
-dist/argoexec: $(ARGOEXEC_PKG_FILES) go.sum
+dist/argoexec: $(ARGOEXEC_PKGS) go.sum
 ifeq ($(shell uname -s),Darwin)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -gcflags '${GCFLAGS}' -v -ldflags '${LDFLAGS} -extldflags -static' -o $@ ./cmd/argoexec
 else
@@ -290,59 +280,57 @@ swagger: \
 	api/jsonschema/schema.json
 
 
-$(GOPATH)/bin/mockery: Makefile
+$(GOPATH)/bin/mockery:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
-	go install github.com/vektra/mockery/v2@v2.42.2
+	go install github.com/vektra/mockery/v2@v2.42.0
 endif
-$(GOPATH)/bin/controller-gen: Makefile
+$(GOPATH)/bin/controller-gen:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
-	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.15.0
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0
 endif
-$(GOPATH)/bin/go-to-protobuf: Makefile
+$(GOPATH)/bin/go-to-protobuf:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
-	# TODO: currently fails on v0.30.3 with
-	# Unable to clean package k8s.io.api.core.v1: remove /home/runner/go/pkg/mod/k8s.io/api@v0.30.3/core/v1/generated.proto: permission denied
 	go install k8s.io/code-generator/cmd/go-to-protobuf@v0.21.5
 endif
-$(GOPATH)/src/github.com/gogo/protobuf: Makefile
+$(GOPATH)/src/github.com/gogo/protobuf:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
-	[ -e $@ ] || git clone --depth 1 https://github.com/gogo/protobuf.git -b v1.3.2 $@
+	[ -e $(GOPATH)/src/github.com/gogo/protobuf ] || git clone --depth 1 https://github.com/gogo/protobuf.git -b v1.3.2 $(GOPATH)/src/github.com/gogo/protobuf
 endif
-$(GOPATH)/bin/protoc-gen-gogo: Makefile
+$(GOPATH)/bin/protoc-gen-gogo:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install github.com/gogo/protobuf/protoc-gen-gogo@v1.3.2
 endif
-$(GOPATH)/bin/protoc-gen-gogofast: Makefile
+$(GOPATH)/bin/protoc-gen-gogofast:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install github.com/gogo/protobuf/protoc-gen-gogofast@v1.3.2
 endif
-$(GOPATH)/bin/protoc-gen-grpc-gateway: Makefile
+$(GOPATH)/bin/protoc-gen-grpc-gateway:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 endif
-$(GOPATH)/bin/protoc-gen-swagger: Makefile
+$(GOPATH)/bin/protoc-gen-swagger:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 endif
-$(GOPATH)/bin/openapi-gen: Makefile
+$(GOPATH)/bin/openapi-gen:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install k8s.io/kube-openapi/cmd/openapi-gen@v0.0.0-20220124234850-424119656bbf
 endif
-$(GOPATH)/bin/swagger: Makefile
+$(GOPATH)/bin/swagger:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
 endif
-$(GOPATH)/bin/goimports: Makefile
+$(GOPATH)/bin/goimports:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	go install golang.org/x/tools/cmd/goimports@v0.1.7
@@ -354,7 +342,7 @@ ifeq ($(shell uname),Darwin)
 	brew install clang-format
 else
 	sudo apt update
-	sudo apt install -y clang-format
+	sudo apt install clang-format
 endif
 endif
 
@@ -445,8 +433,8 @@ dist/manifests/%: manifests/%
 
 # lint/test/etc
 
-$(GOPATH)/bin/golangci-lint: Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b `go env GOPATH`/bin v1.61.0
+$(GOPATH)/bin/golangci-lint:
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b `go env GOPATH`/bin v1.55.1
 
 .PHONY: lint
 lint: server/static/files.go $(GOPATH)/bin/golangci-lint
@@ -523,7 +511,7 @@ dist/argosay:
 	cp test/e2e/images/argosay/v2/argosay dist/
 
 .PHONY: kit
-kit: Makefile
+kit:
 ifeq ($(shell command -v kit),)
 ifeq ($(shell uname),Darwin)
 	brew tap kitproj/kit --custom-remote https://github.com/kitproj/kit
@@ -617,8 +605,6 @@ pkg/apis/workflow/v1alpha1/openapi_generated.go: $(GOPATH)/bin/openapi-gen $(TYP
 	  --input-dirs github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1 \
 	  --output-package github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1 \
 	  --report-filename pkg/apis/api-rules/violation_exceptions.list
-	# Force the timestamp to be up to date
-	touch $@
 	# Delete the link
 	[ -e ./v3 ] && rm -rf v3
 
@@ -632,16 +618,12 @@ pkg/apis/workflow/v1alpha1/zz_generated.deepcopy.go: $(TYPES)
 	    github.com/argoproj/argo-workflows/v3/pkg/client github.com/argoproj/argo-workflows/v3/pkg/apis \
 	    workflow:v1alpha1 \
 	    --go-header-file ./hack/custom-boilerplate.go.txt
-	# Force the timestamp to be up to date
-	touch $@
 	# Delete the link
 	[ -e ./v3 ] && rm -rf v3
 
-dist/kubernetes.swagger.json: Makefile
+dist/kubernetes.swagger.json:
 	@mkdir -p dist
-	# recurl will only fetch if the file doesn't exist, so delete it
-	rm -f $@
-	./hack/recurl.sh $@ https://raw.githubusercontent.com/kubernetes/kubernetes/v1.30.3/api/openapi-spec/swagger.json
+	./hack/recurl.sh dist/kubernetes.swagger.json https://raw.githubusercontent.com/kubernetes/kubernetes/v1.23.3/api/openapi-spec/swagger.json
 
 pkg/apiclient/_.secondary.swagger.json: hack/api/swagger/secondaryswaggergen.go pkg/apis/workflow/v1alpha1/openapi_generated.go dist/kubernetes.swagger.json
 	rm -Rf v3 vendor
@@ -681,12 +663,12 @@ docs/fields.md: api/openapi-spec/swagger.json $(shell find examples -type f) hac
 	env ARGO_SECURE=false ARGO_INSECURE_SKIP_VERIFY=false ARGO_SERVER= ARGO_INSTANCEID= go run ./hack/docs fields
 
 # generates several other files
-docs/cli/argo.md: $(CLI_PKG_FILES) go.sum server/static/files.go hack/docs/cli.go
+docs/cli/argo.md: $(CLI_PKGS) go.sum server/static/files.go hack/docs/cli.go
 	go run ./hack/docs cli
 
 # docs
 
-/usr/local/bin/mdspell: Makefile
+/usr/local/bin/mdspell:
 # update this in Nix when upgrading it here
 ifneq ($(USE_NIX), true)
 	npm list -g markdown-spellcheck@1.3.1 > /dev/null || npm i -g markdown-spellcheck@1.3.1
@@ -697,7 +679,7 @@ docs-spellcheck: /usr/local/bin/mdspell
 	# check docs for spelling mistakes
 	mdspell --ignore-numbers --ignore-acronyms --en-us --no-suggestions --report $(shell find docs -name '*.md' -not -name upgrading.md -not -name README.md -not -name fields.md -not -name upgrading.md -not -name executor_swagger.md -not -path '*/cli/*')
 	# alphabetize spelling file -- ignore first line (comment), then sort the rest case-sensitive and remove duplicates
-	$(shell cat .spelling | awk 'NR<2{ print $0; next } { print $0 | "LC_COLLATE=C sort" }' | uniq | tee .spelling > /dev/null)
+	$(shell cat .spelling | awk 'NR<2{ print $0; next } { print $0 | "sort" }' | uniq | tee .spelling > /dev/null)
 
 /usr/local/bin/markdown-link-check:
 # update this in Nix when upgrading it here

@@ -3,15 +3,15 @@ kind: Workflow
 metadata:
   generateName: pod-spec-patch-
 spec:
-  entrypoint: hello-world
+  entrypoint: whalesay
   arguments:
     parameters:
       - name: cpu-limit
         value: 100m
   templates:
-  - name: hello-world
+  - name: whalesay
     podSpecPatch: '{"containers":[{"name":"main", "resources":{"limits":{"cpu": "{{workflow.parameters.cpu-limit}}" }}}]}'
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world"]

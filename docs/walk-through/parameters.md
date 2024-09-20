@@ -8,26 +8,28 @@ kind: Workflow
 metadata:
   generateName: hello-world-parameters-
 spec:
-  # invoke the print-message template with "hello world" as the argument to the message parameter
-  entrypoint: print-message
+  # invoke the whalesay template with
+  # "hello world" as the argument
+  # to the message parameter
+  entrypoint: whalesay
   arguments:
     parameters:
     - name: message
       value: hello world
 
   templates:
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message       # parameter declaration
     container:
-      # run echo with that message input parameter as args
-      image: busybox
-      command: [echo]
+      # run cowsay with that message input parameter as args
+      image: docker/whalesay
+      command: [cowsay]
       args: ["{{inputs.parameters.message}}"]
 ```
 
-This time, the `print-message` template takes an input parameter named `message` that is passed as the `args` to the `echo` command. In order to reference parameters (e.g., ``"{{inputs.parameters.message}}"``), the parameters must be enclosed in double quotes to escape the curly braces in YAML.
+This time, the `whalesay` template takes an input parameter named `message` that is passed as the `args` to the `cowsay` command. In order to reference parameters (e.g., ``"{{inputs.parameters.message}}"``), the parameters must be enclosed in double quotes to escape the curly braces in YAML.
 
 The argo CLI provides a convenient way to override parameters used to invoke the entrypoint. For example, the following command would bind the `message` parameter to "goodbye world" instead of the default "hello world".
 
@@ -47,10 +49,10 @@ To run use following command:
 argo submit arguments-parameters.yaml --parameter-file params.yaml
 ```
 
-Command-line parameters can also be used to override the default entrypoint and invoke any template in the workflow spec. For example, if you add a new version of the `print-message` template called `print-message-caps` but you don't want to change the default entrypoint, you can invoke this from the command line as follows:
+Command-line parameters can also be used to override the default entrypoint and invoke any template in the workflow spec. For example, if you add a new version of the `whalesay` template called `whalesay-caps` but you don't want to change the default entrypoint, you can invoke this from the command line as follows:
 
 ```bash
-argo submit arguments-parameters.yaml --entrypoint print-message-caps
+argo submit arguments-parameters.yaml --entrypoint whalesay-caps
 ```
 
 By using a combination of the `--entrypoint` and `-p` parameters, you can call any template in the workflow spec with any parameter that you like.

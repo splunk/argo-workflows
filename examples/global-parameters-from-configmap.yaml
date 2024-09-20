@@ -6,10 +6,12 @@ metadata:
     workflows.argoproj.io/test: "true"
   annotations:
     workflows.argoproj.io/description: |
-      This example demonstrates loading global parameter values from a ConfigMap.
-      Note that the "simple-parameters" ConfigMap (defined in `examples/configmaps/simple-parameters-configmap.yaml`) needs to be created first before submitting this workflow.
+      This example demonstrates loading global parameter values from configmap.
+      Note that the "simple-parameters" ConfigMap (defined in examples/configmaps/simple-parameters-configmap.yaml)
+      needs to be created first before submitting this workflow.
 spec:
-  entrypoint: print-message
+  serviceAccountName: argo
+  entrypoint: whalesay
   # Parameters can also be passed via configmap reference.
   arguments:
     parameters:
@@ -20,8 +22,7 @@ spec:
           key: msg
 
   templates:
-  - name: print-message
+  - name: whalesay
     container:
-      image: busybox
-      command: ["echo"]
-      args: ["{{workflow.parameters.message}}"]
+      image: argoproj/argosay:v2
+      args: ["echo", "{{workflow.parameters.message}}"]

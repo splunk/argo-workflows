@@ -9,9 +9,9 @@ spec:
   templates:
     - name: main
       container:
-        image: busybox
+        image: docker/whalesay:latest
         command: [ sh, -c ]
-        args: [ "echo hello world | tee /tmp/hello_world.txt" ]
+        args: [ "cowsay hello world | tee /tmp/hello_world.txt" ]
       outputs:
         artifacts:
           - name: hello_world

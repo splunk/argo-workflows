@@ -10,13 +10,13 @@ spec:
     dag:
       tasks:
       - name: A
-        template: print-message
+        template: whalesay
         arguments:
           parameters:
           - {name: message, value: A}
       - name: B
         depends: "A"
-        template: print-message
+        template: whalesay
         arguments:
           parameters:
           - {name: message, value: "{{item}}"}
@@ -26,16 +26,16 @@ spec:
         - baz
       - name: C
         depends: "B"
-        template: print-message
+        template: whalesay
         arguments:
           parameters:
           - {name: message, value: C}
 
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["{{inputs.parameters.message}}"]

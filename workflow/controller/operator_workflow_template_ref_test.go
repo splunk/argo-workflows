@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
+	"k8s.io/utils/pointer"
 
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo-workflows/v3/util"
@@ -318,7 +317,7 @@ func TestWorkflowTemplateRefWithShutdownAndSuspend(t *testing.T) {
 		wf1 := woc.wf.DeepCopy()
 		// Updating Pod state
 		makePodsPhase(ctx, woc, apiv1.PodPending)
-		wf1.Spec.Suspend = ptr.To(true)
+		wf1.Spec.Suspend = pointer.Bool(true)
 		woc1 := newWorkflowOperationCtx(wf1, controller)
 		woc1.operate(ctx)
 		assert.NotNil(t, woc1.wf.Status.StoredWorkflowSpec.Suspend)
@@ -341,9 +340,10 @@ func TestWorkflowTemplateRefWithShutdownAndSuspend(t *testing.T) {
 		assert.NotEmpty(t, woc1.wf.Status.StoredWorkflowSpec.Shutdown)
 		assert.Equal(t, wfv1.ShutdownStrategyTerminate, woc1.wf.Status.StoredWorkflowSpec.Shutdown)
 		for _, node := range woc1.wf.Status.Nodes {
-			require.NotNil(t, node)
-			assert.Contains(t, node.Message, "workflow shutdown with strategy")
-			assert.Contains(t, node.Message, "Terminate")
+			if assert.NotNil(t, node) {
+				assert.Contains(t, node.Message, "workflow shutdown with strategy")
+				assert.Contains(t, node.Message, "Terminate")
+			}
 		}
 	})
 	t.Run("WorkflowTemplateRefWithShutdownStop", func(t *testing.T) {
@@ -363,9 +363,10 @@ func TestWorkflowTemplateRefWithShutdownAndSuspend(t *testing.T) {
 		assert.NotEmpty(t, woc1.wf.Status.StoredWorkflowSpec.Shutdown)
 		assert.Equal(t, wfv1.ShutdownStrategyStop, woc1.wf.Status.StoredWorkflowSpec.Shutdown)
 		for _, node := range woc1.wf.Status.Nodes {
-			require.NotNil(t, node)
-			assert.Contains(t, node.Message, "workflow shutdown with strategy")
-			assert.Contains(t, node.Message, "Stop")
+			if assert.NotNil(t, node) {
+				assert.Contains(t, node.Message, "workflow shutdown with strategy")
+				assert.Contains(t, node.Message, "Stop")
+			}
 		}
 	})
 }
@@ -524,13 +525,13 @@ func TestWFTWithVol(t *testing.T) {
 	woc := newWorkflowOperationCtx(wf, controller)
 	woc.operate(ctx)
 	pvc, err := controller.kubeclientset.CoreV1().PersistentVolumeClaims("default").List(ctx, metav1.ListOptions{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assert.Len(t, pvc.Items, 1)
 	makePodsPhase(ctx, woc, apiv1.PodSucceeded)
 	woc.operate(ctx)
 	pvc, err = controller.kubeclientset.CoreV1().PersistentVolumeClaims("default").List(ctx, metav1.ListOptions{})
-	require.NoError(t, err)
-	assert.Empty(t, pvc.Items)
+	assert.NoError(t, err)
+	assert.Len(t, pvc.Items, 0)
 }
 
 const wfTmp = `
@@ -619,8 +620,8 @@ func TestWorkflowTemplateWithDynamicRef(t *testing.T) {
 	woc.operate(ctx)
 	assert.Equal(t, wfv1.WorkflowRunning, woc.wf.Status.Phase)
 	pods, err := listPods(woc)
-	require.NoError(t, err)
-	assert.NotEmpty(t, pods.Items, "pod was not created successfully")
+	assert.NoError(t, err)
+	assert.True(t, len(pods.Items) > 0, "pod was not created successfully")
 	pod := pods.Items[0]
 	assert.Contains(t, pod.Name, "hello-world")
 	assert.Equal(t, "docker/whalesay", pod.Spec.Containers[1].Image)

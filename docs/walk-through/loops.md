@@ -32,8 +32,8 @@ spec:
 
   - name: hello-world
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["hello world!"]
 ```
 
@@ -51,23 +51,23 @@ spec:
   templates:
   - name: loop-example
     steps:
-    - - name: print-message-loop
-        template: print-message
+    - - name: print-message
+        template: whalesay
         arguments:
           parameters:
           - name: message
             value: "{{item}}"
-        withItems:              # invoke print-message once for each item in parallel
+        withItems:              # invoke whalesay once for each item in parallel
         - hello world           # item 1
         - goodbye world         # item 2
 
-  - name: print-message
+  - name: whalesay
     inputs:
       parameters:
       - name: message
     container:
-      image: busybox
-      command: [echo]
+      image: docker/whalesay:latest
+      command: [cowsay]
       args: ["{{inputs.parameters.message}}"]
 ```
 

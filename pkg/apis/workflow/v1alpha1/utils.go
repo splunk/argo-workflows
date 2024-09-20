@@ -7,14 +7,14 @@ import (
 )
 
 func ParseStringToDuration(durationString string) (time.Duration, error) {
-	var duration time.Duration
+	var suspendDuration time.Duration
 	// If no units are attached, treat as seconds
 	if val, err := strconv.Atoi(durationString); err == nil {
-		duration = time.Duration(val) * time.Second
-	} else if parsed, err := time.ParseDuration(durationString); err == nil {
-		duration = parsed
+		suspendDuration = time.Duration(val) * time.Second
+	} else if duration, err := time.ParseDuration(durationString); err == nil {
+		suspendDuration = duration
 	} else {
 		return 0, fmt.Errorf("unable to parse %s as a duration: %w", durationString, err)
 	}
-	return duration, nil
+	return suspendDuration, nil
 }

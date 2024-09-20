@@ -6,14 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMustUnmarshalClusterWorkflowTemplate(t *testing.T) {
+func TestMustUnmarshalClusterWorkflow(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Fatalf("The code did not panic but should have")
 		} else {
-			assert.Equal(t, "no text to unmarshal", r.(string))
+			assert.Equal(t, r.(string), "no text to unmarshal")
 		}
 	}()
-	_ = MustUnmarshalClusterWorkflowTemplate([]byte(""))
-	t.Fatalf("MustUnmarshalClusterWorkflowTemplate should have panicked and this part should not have been reached.")
+	_ = MustUnmarshalClusterWorkflow([]byte(""))
+	t.Fatalf("MustUnmarshalClusterWorkflow should have panicked and this part should not have been reached.")
 }

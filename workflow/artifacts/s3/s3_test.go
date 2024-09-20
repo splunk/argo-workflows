@@ -11,7 +11,6 @@ import (
 	argos3 "github.com/argoproj/pkg/s3"
 	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 )
@@ -230,10 +229,10 @@ func TestOpenStreamS3Artifact(t *testing.T) {
 				},
 			})
 			if tc.errMsg == "" {
-				require.NoError(t, err)
+				assert.Nil(t, err)
 				assert.NotNil(t, stream)
 			} else {
-				require.Error(t, err)
+				assert.NotNil(t, err)
 				assert.Equal(t, tc.errMsg, err.Error())
 			}
 		})
@@ -397,7 +396,7 @@ func TestLoadS3Artifact(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, tc.errMsg, err.Error())
 			} else {
-				assert.Equal(t, "", tc.errMsg)
+				assert.Equal(t, tc.errMsg, "")
 			}
 		})
 	}
@@ -531,7 +530,7 @@ func TestSaveS3Artifact(t *testing.T) {
 			if err != nil {
 				assert.Equal(t, tc.errMsg, err.Error())
 			} else {
-				assert.Equal(t, "", tc.errMsg)
+				assert.Equal(t, tc.errMsg, "")
 			}
 		})
 	}
@@ -607,10 +606,10 @@ func TestListObjects(t *testing.T) {
 					},
 				})
 			if tc.expectedSuccess {
-				require.NoError(t, err)
-				assert.Len(t, files, tc.expectedNumFiles)
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expectedNumFiles, len(files))
 			} else {
-				require.Error(t, err)
+				assert.NotNil(t, err)
 				assert.Equal(t, tc.expectedErrMsg, err.Error())
 			}
 		})

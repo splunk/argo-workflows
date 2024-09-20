@@ -7,13 +7,13 @@ kind: Workflow
 metadata:
   generateName: output-artifact-gcs-
 spec:
-  entrypoint: hello-world-to-file
+  entrypoint: whalesay
   templates:
-  - name: hello-world-to-file
+  - name: whalesay
     container:
-      image: busybox
+      image: docker/whalesay:latest
       command: [sh, -c]
-      args: ["echo hello world | tee /tmp/hello_world.txt"]
+      args: ["cowsay hello world | tee /tmp/hello_world.txt"]
     outputs:
       artifacts:
         - name: message
@@ -25,7 +25,7 @@ spec:
             # resulting object has an accurate file extension and mime-type. If archive is set to
             # 'none', then preserve the appropriate file extension for the key name
             key: path/in/bucket/hello_world.txt.tgz
-
+            
             # serviceAccountKeySecret is a secret selector.
             # It references the k8s secret named 'my-gcs-credentials'.
             # This secret is expected to have have the key 'serviceAccountKey',

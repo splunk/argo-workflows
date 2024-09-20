@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -62,14 +61,6 @@ func (azblobDriver *ArtifactDriver) newAzureContainerClient() (*container.Client
 		if azblobDriver.AccountKey == "" {
 			return nil, fmt.Errorf("accountKey secret is required for Azure Blob Storage if useSDKCreds is false")
 		}
-
-		if isSASAccountKey(azblobDriver.AccountKey) {
-			log.Infof("Provided account key is a SAS token. Using no-credential client.")
-			serviceURL := fmt.Sprintf("%s?%s", containerUrl.String(), azblobDriver.AccountKey)
-			containerClient, err := container.NewClientWithNoCredential(serviceURL, nil)
-			return containerClient, err
-		}
-
 		accountName, err := determineAccountName(containerUrl)
 		if err != nil {
 			return nil, err
@@ -97,15 +88,6 @@ func determineAccountName(containerUrl *url.URL) (string, error) {
 		parts := strings.Split(hostname, ".")
 		return parts[0], nil
 	}
-}
-
-// isSASAccountKey determines whether the account key provided is a SAS token instead of a
-// storage account key. A SAS token is a string of query parameters that is appended to the
-// URL of the storage account. This function looks for the presence of a query parameter in
-// the string and returns true if found.
-func isSASAccountKey(accountKey string) bool {
-	re := regexp.MustCompile(`(\?|\&)([^=]+)\=([^&]+)`)
-	return re.MatchString(accountKey)
 }
 
 // Load downloads artifacts from Azure Blob Storage

@@ -16,24 +16,25 @@ spec:
     - name: hello-hello-hello
       steps:
         - - name: hello1
-            template: print-message
+            template: whalesay
             arguments:
               parameters: [{name: message, value: "hello1"}]
         - - name: hello2a
-            template: print-message
+            template: whalesay
             arguments:
               parameters: [{name: message, value: "hello2a"}]
           - name: hello2b
-            template: print-message
+            template: whalesay
             arguments:
               parameters: [{name: message, value: "hello2b"}]
 
-    - name: print-message
+    - name: whalesay
       inputs:
         parameters:
           - name: message
       container:
-        image: busybox
-        command: [echo]
+        image: docker/whalesay
+        command: [cowsay]
         args: ["{{user.username}}"]
+
 ```
