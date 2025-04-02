@@ -465,6 +465,7 @@ func (wfc *WorkflowController) runConfigMapWatcher(ctx context.Context) {
 			log.Debugf("received config map %s/%s update", cm.Namespace, cm.Name)
 			if cm.GetName() == wfc.configController.GetName() && wfc.namespace == cm.GetNamespace() {
 				log.Infof("Received Workflow Controller config map %s/%s update", cm.Namespace, cm.Name)
+				log.Infof("This is PO controller!!!!")
 				wfc.UpdateConfig(ctx)
 			}
 			wfc.notifySemaphoreConfigUpdate(cm)
